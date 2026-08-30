@@ -18,15 +18,30 @@ type Response struct {
 
 // respondOK 成功响应
 func respondOK(w http.ResponseWriter, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(Response{Code: 0, Msg: "ok", Data: data})
+	respondJSON(w, http.StatusOK, Response{Code: 0, Msg: "ok", Data: data})
 }
 
 // respondErr 错误响应
 func respondErr(w http.ResponseWriter, httpCode int, msg string) {
+	respondJSON(w, httpCode, Response{Code: 1, Msg: msg, Data: nil})
+}
+
+// respondJSON 统一缓冲输出: 先整体序列化, 再单次写入并显式声明 Content-Length。
+// 流式写入(Encoder 直写 w)在异常/客户端断开时会让客户端拿到静默截断的 JSON
+// ("Unexpected end of JSON input"); 缓冲+定长使响应原子化, 截断必可被客户端检测。
+func respondJSON(w http.ResponseWriter, httpCode int, resp Response) {
+	bs, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", strconv.Itoa(len(bs)))
 	w.WriteHeader(httpCode)
-	_ = json.NewEncoder(w).Encode(Response{Code: 1, Msg: msg, Data: nil})
+	if n, werr := w.Write(bs); werr != nil || n != len(bs) {
+		// 客户端提前断开等; 已无法补救, 仅占位说明
+		_ = werr
+	}
 }
 
 // ---- 参数解析辅助 ----

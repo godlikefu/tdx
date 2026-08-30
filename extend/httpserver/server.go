@@ -1,7 +1,10 @@
 package httpserver
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/injoyai/ios/client"
 	"github.com/injoyai/tdx"
@@ -135,8 +138,11 @@ func New(opts ...Option) (*Server, error) {
 	s.registerRoutes(mux)
 
 	s.server = &http.Server{
-		Addr:    cfg.addr,
-		Handler: mux,
+		Addr:              cfg.addr,
+		Handler:           s.recoverMiddleware(mux),
+		ReadHeaderTimeout: 10 * time.Second,
+		// 不设 WriteTimeout: 大响应(如全量逐笔 ~500KB)在慢客户端上会被中途掐断,
+		// 截断比慢更伤(客户端拿到非法 JSON); 慢由客户端自身超时控制。
 	}
 	return s, nil
 }
@@ -266,6 +272,20 @@ func (s *Server) registerRoutes(mux *http.ServeMux) {
 		mux.HandleFunc("GET /mac/server_session", s.handleMacServerSession)
 		mux.HandleFunc("GET /mac/kline_count", s.handleMacKlineCount)
 	}
+}
+
+// recoverMiddleware panic 兜底: handler 异常时返回干净的 500 JSON,
+// 而不是让 net/http 直接掐断连接(客户端表现为响应截断/非法 JSON)
+func (s *Server) recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				log.Printf("[http] panic %s %s: %v", r.Method, r.URL, e)
+				respondErr(w, http.StatusInternalServerError, fmt.Sprintf("服务器内部错误: %v", e))
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 // handleHealth 健康检查

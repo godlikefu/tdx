@@ -1,12 +1,37 @@
 package httpserver
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/injoyai/tdx"
 	"github.com/injoyai/tdx/protocol"
 )
+
+// macCallTimeout 单次 mac 调用兜底超时。公共服务器偶发卡顿/重连时,
+// 及时返回干净的 504, 避免 handler 无限期挂起 → 客户端超时断开 → 截断 JSON。
+const macCallTimeout = 15 * time.Second
+
+// doMac 带兜底超时地执行 mac 池调用(超时后调用的结果被丢弃, 连接由池回收)
+func (s *Server) doMac(fn func(c *tdx.Client) error) error {
+	done := make(chan error, 1)
+	go func() {
+		defer func() {
+			if e := recover(); e != nil {
+				done <- fmt.Errorf("panic: %v", e)
+			}
+		}()
+		done <- s.macPool.Do(fn)
+	}()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(macCallTimeout):
+		return fmt.Errorf("mac 调用超时(>%v), 服务器繁忙或连接重建中, 请稍后重试", macCallTimeout)
+	}
+}
 
 // mac 方言接口: 主力净流入/秒级逐笔/板块体系等标准协议没有的数据。
 // 需通过 WithMacHosts(...) 启用 mac 连接池, 否则路由不注册。
@@ -32,7 +57,7 @@ func (s *Server) handleMacQuote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var quotes []*protocol.MacQuote
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		quotes, e = c.GetMacQuote(strings.Split(codesStr, ",")...)
 		return e
@@ -58,7 +83,7 @@ func (s *Server) handleMacTrade(w http.ResponseWriter, r *http.Request) {
 	start := queryUint16Default(r, "start", 0)
 	count := queryUint16Default(r, "count", 100)
 	var resp *protocol.MacTradeResp
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacTrade(code, uint32(start), count)
 		return e
@@ -82,7 +107,7 @@ func (s *Server) handleMacTradeAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var resp *protocol.MacTradeResp
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacTradeAll(code)
 		return e
@@ -113,7 +138,7 @@ func (s *Server) handleMacHistoryTrade(w http.ResponseWriter, r *http.Request) {
 	start := queryUint16Default(r, "start", 0)
 	count := queryUint16Default(r, "count", 100)
 	var resp *protocol.MacTradeResp
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacHistoryTrade(date, code, uint32(start), count)
 		return e
@@ -137,7 +162,7 @@ func (s *Server) handleMacCapitalFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var resp *protocol.MacCapitalFlow
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacCapitalFlow(code)
 		return e
@@ -161,7 +186,7 @@ func (s *Server) handleMacBelongBoards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var resp []*protocol.MacBelongBoard
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacBelongBoards(code)
 		return e
@@ -187,7 +212,7 @@ func (s *Server) handleMacBoardMembers(w http.ResponseWriter, r *http.Request) {
 	start := queryUint16Default(r, "start", 0)
 	count := queryUint16Default(r, "count", 10)
 	var resp []*protocol.MacQuote
-	err = s.macPool.Do(func(c *tdx.Client) error {
+	err = s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacBoardMembers(board, start, count)
 		return e
@@ -206,7 +231,7 @@ func (s *Server) handleMacServerSession(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var resp *protocol.MacServerSession
-	err := s.macPool.Do(func(c *tdx.Client) error {
+	err := s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacServerSession()
 		return e
@@ -225,7 +250,7 @@ func (s *Server) handleMacKlineCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var resp *protocol.MacKlineCount
-	err := s.macPool.Do(func(c *tdx.Client) error {
+	err := s.doMac(func(c *tdx.Client) error {
 		var e error
 		resp, e = c.GetMacKlineCount()
 		return e
