@@ -41,6 +41,7 @@
 | mac 批量自定义行情(主力净流入等) | ✅ 已完成 | `DialMacDefault` + `GetMacQuote` |
 | mac 资金流向 / 所属板块 / 板块成分 | ✅ 已完成 | `GetMacCapitalFlow` `GetMacBelongBoards` `GetMacBoardMembers` |
 | mac 交易时段 / K线总量 / 远程文件 | ✅ 已完成 | `GetMacServerSession` `GetMacKlineCount` `GetMacFile` |
+| HTTP API 服务(标准+mac 双池) | ✅ 已完成 | `go run ./cmd/tdx-api` 或 `httpserver` 包 |
 
 ---
 

@@ -26,7 +26,98 @@ s, _ := httpserver.New(
 | GET /mac/server_session | - | 服务器交易时段与交易日历 |
 | GET /mac/kline_count | - | K线数据总量(可兼作探活) |
 
+### mac 接口请求示例
+
+以下均为实测响应(数据日 2026-08-28 收盘快照; 价格字段单位=厘(元×1000), 成交额=元):
+
+```bash
+# 批量自定义字段报价: 主力净流入/内外盘/涨跌停价/PE/五档盘口/委比 (≤80只/次)
+curl "http://127.0.0.1:8080/mac/quote?codes=sh601872,sz000001"
+{
+  "code": 0, "msg": "ok",
+  "data": [{
+    "Market": 1, "Code": "601872", "Name": "招商轮船",
+    "PreClose": 18620, "Open": 19000, "High": 19300, "Low": 18820,
+    "Price": 18980, "AvgPrice": 19106,
+    "BuyPriceLimit": 20480, "SellPriceLimit": 16760,
+    "Volume": 864362, "Amount": 1651491328,
+    "InsideVolume": 427871, "OutsideVolume": 436491,
+    "VolRatio": 0.71, "Turnover": 1.07, "PE": 13.86,
+    "LastVolume": 6432, "AfterHoursVol": 38100,
+    "MainNetAmount": -104935744, "MainNetRatio": -0.22, "EntrustRatio": 30.16,
+    "Bids": [ { "Price": 18980, "Vol": 364 }, { "Price": 18970, "Vol": 736 },
+              { "Price": 18960, "Vol": 840 }, { "Price": 18950, "Vol": 1036 },
+              { "Price": 18940, "Vol": 761 } ],
+    "Asks": [ { "Price": 18990, "Vol": 302 }, { "Price": 19000, "Vol": 970 },
+              { "Price": 19010, "Vol": 138 }, { "Price": 19020, "Vol": 385 },
+              { "Price": 19030, "Vol": 210 } ]
+  }]
+}
+
+# 当日全量秒级逐笔(含集合竞价/盘后固定价, Time 日期部分为客户端当日戳)
+curl "http://127.0.0.1:8080/mac/trade/all?code=sh601872"
+{
+  "code": 0, "msg": "ok",
+  "data": { "Count": 4597, "Total": 4597, "List": [
+    { "Time": "2026-08-30T09:25:01+08:00", "Price": 19000, "Volume": 7907, "TradeCount": 626, "Status": 2 },
+    { "Time": "2026-08-30T09:30:01+08:00", "Price": 18990, "Volume": 493,  "TradeCount": 36,  "Status": 1 }
+  ]}
+}
+# Status: 0=买盘 1=卖盘 2=中性(竞价) 5=盘后固定价
+
+# 分页取逐笔: start 从最新端往回
+curl "http://127.0.0.1:8080/mac/trade?code=sh601872&start=0&count=100"
+# 指定日期逐笔
+curl "http://127.0.0.1:8080/mac/trade/history?code=sh601872&date=20260828&start=0&count=100"
+
+# 资金流向(主力/散户净额, 通达信口径; FiveDay=[买5日,卖5日,超大单,大单,中单,小单] 口径待考)
+curl "http://127.0.0.1:8080/mac/capital_flow?code=sh601872"
+{
+  "code": 0, "msg": "ok",
+  "data": { "MainIn": 505323328, "MainOut": 610259072, "MainNet": -104935744,
+            "SmallIn": 1146102016, "SmallOut": 1041166144, "SmallNet": 104935872,
+            "FiveDay": [4646344192, 4910187008, -615941120, -60462960, -118721280, 795125120] }
+}
+
+# 所属板块
+curl "http://127.0.0.1:8080/mac/belong_boards?code=sh601872"
+{ "code": 0, "msg": "ok", "data": [
+  { "BoardType": 3, "Market": 1, "BoardCode": "880216", "BoardName": "上海板块", "Close": 1866.63, "PreClose": 1879.19 },
+  { "BoardType": 5, "Market": 1, "BoardCode": "880578", "BoardName": "专项贷款", "Close": 1513.22, "PreClose": 1507.48 }
+]}
+
+# 板块成分(按涨幅降序; 板块显示代码自动转协议代码 880216→20216)
+curl "http://127.0.0.1:8080/mac/board_members?board=880216&start=0&count=10"
+
+# 服务器交易时段/交易日历
+curl "http://127.0.0.1:8080/mac/server_session"
+{ "code": 0, "msg": "ok", "data": {
+  "Today": "2026-08-30T00:00:00+08:00", "LastTradingDay": "2026-08-28T00:00:00+08:00",
+  "Sessions1": [ { "Open": 570, "Close": 690 }, { "Open": 780, "Close": 900 },
+                 { "Open": 0, "Close": 0 }, { "Open": 0, "Close": 0 } ],
+  "Sessions2": [ ... ], "MarketParam1": 0, "MarketParam2": 0
+}}
+# Open/Close 为分钟数(570=09:30, 900=15:00)
+
+# K线总量(可兼作 mac 服务探活)
+curl "http://127.0.0.1:8080/mac/kline_count"
+{ "code": 0, "msg": "ok", "data": { "Total": 0, "Returned": 800 } }
+```
+
+`/mac/quote` 字段说明: 价格均为厘(除以 1000 得元); Volume/InsideVolume/OutsideVolume 及 Bids/Asks 的 Vol 单位=手; MainNetAmount/Amount 单位=元; 内盘+外盘=总量已实测恒等。
+
 ## 快速开始
+
+方式一(推荐): 命令行启动器
+
+```bash
+go run ./cmd/tdx-api              # :8080, 标准池+mac池
+go run ./cmd/tdx-api -addr :9090 -pool 4 -mac=false -ex -debug
+# 参数: -addr 监听地址 | -pool 标准池大小 | -mac 启用/mac路由
+#       -mac-pool mac池大小 | -ex 启用/ex路由 | -debug 协议调试日志
+```
+
+方式二: 代码内嵌
 
 ```go
 package main
