@@ -2,6 +2,30 @@
 
 将通达信(tdx)行情数据通过 HTTP API 对外开放。本包基于 `tdx.Client` 实现,以 RESTful GET 接口暴露股票、指数、扩展行情等数据。
 
+## mac 方言接口 (/mac/*)
+
+mac 服务器池与标准池**独立**, 需显式配置 `WithMacHosts(...)` 启用(未配置时这些路由不注册, 返回 404):
+
+```go
+s, _ := httpserver.New(
+    httpserver.WithAddr(":8080"),
+    httpserver.WithMacHosts(tdx.MacHosts...), // 启用 /mac/* 路由
+    httpserver.WithMacPoolSize(1),
+)
+```
+
+| 路由 | 参数 | 说明 |
+|---|---|---|
+| GET /mac/quote | codes=sh601872,sz000001 | 批量自定义字段报价(主力净流入/内外盘/涨跌停价/PE/盘后量/**五档盘口/委比**等 46 字段, ≤80只) |
+| GET /mac/trade | code, start=0, count=100 | 秒级逐笔成交(含笔数/盘后固定价), start 从最新端往回 |
+| GET /mac/trade/all | code | 当日全量秒级逐笔(并发分页, 时间正序) |
+| GET /mac/trade/history | code, date=20260828, start, count | 指定日期秒级逐笔 |
+| GET /mac/capital_flow | code | 资金流向(主力/散户净额, 通达信口径) |
+| GET /mac/belong_boards | code | 个股所属板块(概念/行业/地域) |
+| GET /mac/board_members | board=880216, start, count | 板块成分报价(按涨幅降序) |
+| GET /mac/server_session | - | 服务器交易时段与交易日历 |
+| GET /mac/kline_count | - | K线数据总量(可兼作探活) |
+
 ## 快速开始
 
 ```go

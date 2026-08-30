@@ -96,6 +96,27 @@ func TestMacTradeLive(t *testing.T) {
 		if q.BuyPriceLimit <= 0 || q.SellPriceLimit <= 0 {
 			t.Errorf("涨跌停价异常: %s", q)
 		}
+		// 五档盘口: 买价降序/卖价升序/买一≤卖一, 量>0
+		if q.BidVol1 > 0 && q.AskVol1 > 0 {
+			t.Logf("  盘口: 买[%v×%d %v×%d %v×%d %v×%d %v×%d] 卖[%v×%d %v×%d %v×%d %v×%d %v×%d] 委比=%.2f%%",
+				q.BidPrice1.Float64(), q.BidVol1, q.BidPrice2.Float64(), q.BidVol2,
+				q.BidPrice3.Float64(), q.BidVol3, q.BidPrice4.Float64(), q.BidVol4,
+				q.BidPrice5.Float64(), q.BidVol5,
+				q.AskPrice1.Float64(), q.AskVol1, q.AskPrice2.Float64(), q.AskVol2,
+				q.AskPrice3.Float64(), q.AskVol3, q.AskPrice4.Float64(), q.AskVol4,
+				q.AskPrice5.Float64(), q.AskVol5, q.EntrustRatio)
+			if q.BidPrice1 < q.BidPrice2 || q.BidPrice2 < q.BidPrice3 || q.BidPrice3 < q.BidPrice4 || q.BidPrice4 < q.BidPrice5 {
+				t.Errorf("买盘价格应降序: %s", q.Code)
+			}
+			if q.AskPrice1 > q.AskPrice2 || q.AskPrice2 > q.AskPrice3 || q.AskPrice3 > q.AskPrice4 || q.AskPrice4 > q.AskPrice5 {
+				t.Errorf("卖盘价格应升序: %s", q.Code)
+			}
+			if q.BidPrice1 > q.AskPrice1 {
+				t.Errorf("买一应≤卖一: %s (%v > %v)", q.Code, q.BidPrice1.Float64(), q.AskPrice1.Float64())
+			}
+		} else {
+			t.Errorf("盘口数据缺失: %s 买一量=%d 卖一量=%d", q.Code, q.BidVol1, q.AskVol1)
+		}
 	}
 	// 内部一致性断言(mac 连接不支持标准 0x053E, 无法与 GetQuote 同连接交叉验证)
 	for _, q := range quotes {

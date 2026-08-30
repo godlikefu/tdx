@@ -10,13 +10,16 @@ import (
 // Option HTTP 服务配置选项
 type Option func(*serverConfig)
 
+// serverConfig HTTP 服务配置
 type serverConfig struct {
-	addr       string
-	hosts      []string
-	poolSize   int
-	exHqHosts  []string
-	exPoolSize int
-	options    []client.Option
+	addr        string
+	hosts       []string
+	poolSize    int
+	exHqHosts   []string
+	exPoolSize  int
+	macHosts    []string
+	macPoolSize int
+	options     []client.Option
 }
 
 // WithAddr 设置监听地址
@@ -44,6 +47,16 @@ func WithExPoolSize(n int) Option {
 	return func(c *serverConfig) { c.exPoolSize = n }
 }
 
+// WithMacHosts 设置 mac 方言服务器列表,启用 /mac/* 路由
+func WithMacHosts(hosts ...string) Option {
+	return func(c *serverConfig) { c.macHosts = hosts }
+}
+
+// WithMacPoolSize 设置 mac 连接池大小
+func WithMacPoolSize(n int) Option {
+	return func(c *serverConfig) { c.macPoolSize = n }
+}
+
 // WithOptions 设置通达信连接选项,如 tdx.WithDebug()、tdx.WithRedial()
 func WithOptions(opts ...client.Option) Option {
 	return func(c *serverConfig) {
@@ -53,9 +66,10 @@ func WithOptions(opts ...client.Option) Option {
 
 // Server HTTP 服务
 type Server struct {
-	pool   tdx.IPool
-	exPool tdx.IPool
-	server *http.Server
+	pool    tdx.IPool
+	exPool  tdx.IPool
+	macPool tdx.IPool
+	server  *http.Server
 }
 
 // New 创建并初始化 HTTP 服务
@@ -101,6 +115,20 @@ func New(opts ...Option) (*Server, error) {
 			return nil, err
 		}
 		s.exPool = exPool
+	}
+
+	// mac 方言连接池(独立服务器池, 与标准池不互通)
+	if len(cfg.macHosts) > 0 {
+		if cfg.macPoolSize <= 0 {
+			cfg.macPoolSize = 1
+		}
+		macPool, err := tdx.NewPool(func() (*tdx.Client, error) {
+			return tdx.DialMacHosts(cfg.macHosts, cfg.options...)
+		}, cfg.macPoolSize)
+		if err != nil {
+			return nil, err
+		}
+		s.macPool = macPool
 	}
 
 	mux := http.NewServeMux()
@@ -224,6 +252,19 @@ func (s *Server) registerRoutes(mux *http.ServeMux) {
 		mux.HandleFunc("GET /ex/trade", s.handleExTrade)
 		mux.HandleFunc("GET /ex/trade/hist", s.handleExHistTrade)
 		mux.HandleFunc("GET /ex/bars/range", s.handleExBarsRange)
+	}
+
+	// mac 方言(独立服务器池; 主力净流入/秒级逐笔等标准协议没有的数据)
+	if s.macPool != nil {
+		mux.HandleFunc("GET /mac/quote", s.handleMacQuote)
+		mux.HandleFunc("GET /mac/trade", s.handleMacTrade)
+		mux.HandleFunc("GET /mac/trade/all", s.handleMacTradeAll)
+		mux.HandleFunc("GET /mac/trade/history", s.handleMacHistoryTrade)
+		mux.HandleFunc("GET /mac/capital_flow", s.handleMacCapitalFlow)
+		mux.HandleFunc("GET /mac/belong_boards", s.handleMacBelongBoards)
+		mux.HandleFunc("GET /mac/board_members", s.handleMacBoardMembers)
+		mux.HandleFunc("GET /mac/server_session", s.handleMacServerSession)
+		mux.HandleFunc("GET /mac/kline_count", s.handleMacKlineCount)
 	}
 }
 

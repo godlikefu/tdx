@@ -31,11 +31,12 @@ func TestMacQuoteFrame(t *testing.T) {
 			t.Errorf("位图缺少字段 %#x", fd.bit)
 		}
 	}
-	// 控制区(后4字节)应为 0
-	for _, b := range body[16:20] {
-		if b != 0 {
-			t.Errorf("控制区非零: %#x", b)
-		}
+	// 位图高 4 字节(位 128-159)应恰好覆盖 0x80+ 盘口字段位(0x80-0x8B)
+	if body[16] != 0xff || body[17] != 0x0f {
+		t.Errorf("位图高字节 = %#02x %#02x, 期望 0xff 0x0f", body[16], body[17])
+	}
+	if body[18] != 0 || body[19] != 0 {
+		t.Errorf("位图 18/19 字节应为 0: %#02x %#02x", body[18], body[19])
 	}
 	// 数量
 	if n := binary.LittleEndian.Uint16(body[20:22]); n != 2 {

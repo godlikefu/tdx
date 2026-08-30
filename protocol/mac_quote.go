@@ -13,7 +13,7 @@ mac 批量自定义字段报价(0x122B, 实时)。
 主力净流入/内外盘/均价/涨速/量比/涨跌停价/PE/盘后量等。
 逆向来源: pytdx / easy_tdx codec/bitmap.py + mac/commands/symbol_quotes.py。
 
-请求体: 20B 位图(前16B 字段位图, bit i = 字段 0x%02X; 后4B 控制区, 默认0)
+请求体: 20B 位图(位 i = 字段 0x%02X; 位 128-159 与控制区重叠, 实测服务器支持 0x80+ 盘口位)
        + count(H) + count × (market(H) + code(22B GBK 补零))
 响应体: 20B 位图回显 + total(I) + rowCount(H)
        + rowCount × (68B 头: market(H) + code(22B) + name(44B GBK)
@@ -24,7 +24,7 @@ var (
 	MMacQuote = macQuote{}
 )
 
-// mac 字段位定义(仅列出本库请求的字段; 协议支持 0x00~0x7F 共 128 位)
+// mac 字段位定义(仅列出本库请求的字段; 位图 20B=160 位, 0x80+ 为五档盘口)
 const (
 	mqPreClose       = 0x00 //昨收
 	mqOpen           = 0x01 //开盘价
@@ -51,6 +51,27 @@ const (
 	mqMainNetAmount  = 0x38 //今日主力净流入(元)
 	mqVolSpeedPct    = 0x68 //量涨速%
 	mqMainNetRatio   = 0x6C //主力净比%
+	mqBidPrice1      = 0x11 //买一价
+	mqAskPrice1      = 0x12 //卖一价
+	mqBidVol1        = 0x18 //买一量(<I)
+	mqAskVol1        = 0x19 //卖一量(<I)
+	mqEntrustRatio   = 0x39 //委比%
+	mqBidPrice2      = 0x48 //买二价
+	mqAskPrice2      = 0x49 //卖二价
+	mqBidVol2        = 0x5D //买二量(<I)
+	mqAskVol2        = 0x5E //卖二量(<I)
+	mqBidPrice3      = 0x80 //买三价
+	mqBidPrice4      = 0x81 //买四价
+	mqBidPrice5      = 0x82 //买五价
+	mqAskPrice3      = 0x83 //卖三价
+	mqAskPrice4      = 0x84 //卖四价
+	mqAskPrice5      = 0x85 //卖五价
+	mqBidVol3        = 0x86 //买三量(<I)
+	mqBidVol4        = 0x87 //买四量(<I)
+	mqBidVol5        = 0x88 //买五量(<I)
+	mqAskVol3        = 0x89 //卖三量(<I)
+	mqAskVol4        = 0x8A //卖四量(<I)
+	mqAskVol5        = 0x8B //卖五量(<I)
 )
 
 // mac 字段类型
@@ -62,7 +83,7 @@ const (
 
 // macQuoteFieldDef 字段定义(切片必须按 bit 升序, 与响应字段排列顺序一致)
 type macQuoteFieldDef struct {
-	bit  uint8
+	bit  uint16
 	kind uint8
 }
 
@@ -80,6 +101,10 @@ var macQuoteFields = []macQuoteFieldDef{
 	{mqTotalShares, mqKindFloat},
 	{mqFloatShares, mqKindFloat},
 	{mqPE, mqKindFloat},
+	{mqBidPrice1, mqKindPrice},
+	{mqAskPrice1, mqKindPrice},
+	{mqBidVol1, mqKindUint},
+	{mqAskVol1, mqKindUint},
 	{mqLastVolume, mqKindUint},
 	{mqTurnover, mqKindFloat},
 	{mqBuyPriceLimit, mqKindPrice},
@@ -90,8 +115,25 @@ var macQuoteFields = []macQuoteFieldDef{
 	{mqPeTTM, mqKindFloat},
 	{mqPeStatic, mqKindFloat},
 	{mqMainNetAmount, mqKindFloat},
+	{mqEntrustRatio, mqKindFloat},
+	{mqBidPrice2, mqKindPrice},
+	{mqAskPrice2, mqKindPrice},
+	{mqBidVol2, mqKindUint},
+	{mqAskVol2, mqKindUint},
 	{mqVolSpeedPct, mqKindFloat},
 	{mqMainNetRatio, mqKindFloat},
+	{mqBidPrice3, mqKindPrice},
+	{mqBidPrice4, mqKindPrice},
+	{mqBidPrice5, mqKindPrice},
+	{mqAskPrice3, mqKindPrice},
+	{mqAskPrice4, mqKindPrice},
+	{mqAskPrice5, mqKindPrice},
+	{mqBidVol3, mqKindUint},
+	{mqBidVol4, mqKindUint},
+	{mqBidVol5, mqKindUint},
+	{mqAskVol3, mqKindUint},
+	{mqAskVol4, mqKindUint},
+	{mqAskVol5, mqKindUint},
 }
 
 // macQuoteBitmap 请求位图(16B 字段位图 + 4B 控制区0)
@@ -162,6 +204,28 @@ type MacQuote struct {
 	MainNetAmount  float64 //今日主力净流入(元, 厂商口径, 与腾讯/东财同源)
 	VolSpeedPct    float64 //量涨速%
 	MainNetRatio   float64 //主力净比%
+	EntrustRatio   float64 //委比%
+
+	BidPrice1 Price //买一价(厘)
+	BidPrice2 Price //买二价
+	BidPrice3 Price //买三价
+	BidPrice4 Price //买四价
+	BidPrice5 Price //买五价
+	AskPrice1 Price //卖一价(厘)
+	AskPrice2 Price //卖二价
+	AskPrice3 Price //卖三价
+	AskPrice4 Price //卖四价
+	AskPrice5 Price //卖五价
+	BidVol1   int64 //买一量(手)
+	BidVol2   int64 //买二量
+	BidVol3   int64 //买三量
+	BidVol4   int64 //买四量
+	BidVol5   int64 //买五量
+	AskVol1   int64 //卖一量(手)
+	AskVol2   int64 //卖二量
+	AskVol3   int64 //卖三量
+	AskVol4   int64 //卖四量
+	AskVol5   int64 //卖五量
 }
 
 func (this *MacQuote) String() string {
@@ -183,8 +247,16 @@ func decodeMacQuoteRows(bs []byte, defs []macQuoteFieldDef) ([]*MacQuote, error)
 		return nil, errors.New("数据长度不足")
 	}
 	rowCount := int(Uint16(bs[24:26]))
-	active := macQuoteActiveFields(bs[:16], defs)
+	//位图回显 20B(位 128-159 与控制区重叠)。若服务器对高位字段"原样回显但不打包值",
+	//行长度会与数据不符, 此时回退按低 128 位解析
+	active := macQuoteActiveFields(bs[:20], defs)
 	rowLen := 68 + 4*len(active)
+	if rowCount > 0 && 26+rowCount*rowLen > len(bs) {
+		if fb := macQuoteActiveFields(bs[:16], defs); len(fb) != len(active) {
+			active = fb
+			rowLen = 68 + 4*len(active)
+		}
+	}
 
 	out := make([]*MacQuote, 0, rowCount)
 	pos := 26
@@ -251,6 +323,48 @@ func decodeMacQuoteRows(bs []byte, defs []macQuoteFieldDef) ([]*MacQuote, error)
 				q.VolSpeedPct = f.float(v)
 			case mqMainNetRatio:
 				q.MainNetRatio = f.float(v)
+			case mqEntrustRatio:
+				q.EntrustRatio = f.float(v)
+			case mqBidPrice1:
+				q.BidPrice1 = f.price(v)
+			case mqBidPrice2:
+				q.BidPrice2 = f.price(v)
+			case mqBidPrice3:
+				q.BidPrice3 = f.price(v)
+			case mqBidPrice4:
+				q.BidPrice4 = f.price(v)
+			case mqBidPrice5:
+				q.BidPrice5 = f.price(v)
+			case mqAskPrice1:
+				q.AskPrice1 = f.price(v)
+			case mqAskPrice2:
+				q.AskPrice2 = f.price(v)
+			case mqAskPrice3:
+				q.AskPrice3 = f.price(v)
+			case mqAskPrice4:
+				q.AskPrice4 = f.price(v)
+			case mqAskPrice5:
+				q.AskPrice5 = f.price(v)
+			case mqBidVol1:
+				q.BidVol1 = int64(Uint32(v))
+			case mqBidVol2:
+				q.BidVol2 = int64(Uint32(v))
+			case mqBidVol3:
+				q.BidVol3 = int64(Uint32(v))
+			case mqBidVol4:
+				q.BidVol4 = int64(Uint32(v))
+			case mqBidVol5:
+				q.BidVol5 = int64(Uint32(v))
+			case mqAskVol1:
+				q.AskVol1 = int64(Uint32(v))
+			case mqAskVol2:
+				q.AskVol2 = int64(Uint32(v))
+			case mqAskVol3:
+				q.AskVol3 = int64(Uint32(v))
+			case mqAskVol4:
+				q.AskVol4 = int64(Uint32(v))
+			case mqAskVol5:
+				q.AskVol5 = int64(Uint32(v))
 			}
 		}
 		out = append(out, q)
