@@ -15,6 +15,15 @@ const (
 	TypeHistoryMinute      = 0x0FB4 //历史分时数据
 	TypeHistoryMinuteTrade = 0x0FB5 //历史分时交易
 	TypeKline              = 0x052D //K线图
+	TypeLogin2             = 0x0FDB //第二次登录(标准协议登录命令;mac 方言握手第三条的响应类型)
+	TypeMacTransaction     = 0x122F //mac 方言:逐笔成交(秒级时间+成交笔数,含盘后固定价格成交)
+	TypeMacQuote           = 0x122B //mac 方言:批量自定义字段报价(主力净流入/内外盘/涨跌停价等, 实时)
+	TypeMacBoardMembers    = 0x122C //mac 方言:板块成分报价(响应格式同 0x122B)
+	TypeMacQuery           = 0x1218 //mac 方言:JSON查询(帧头 head=1 所属板块 / head=2 资金流向, 按缓存类型区分)
+	TypeMacServerSession   = 0x120F //mac 方言:服务器交易时段
+	TypeMacKlineOffset     = 0x124A //mac 方言:K线数据偏移/总量
+	TypeMacFileMeta        = 0x1215 //mac 方言:远程文件元信息查询
+	TypeMacFileData        = 0x1217 //mac 方言:远程文件分段下载
 )
 
 var (

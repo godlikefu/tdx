@@ -14,6 +14,10 @@ const (
 	// Prefix 固定帧头
 	Prefix = 0x0C
 
+	// PrefixMac mac 方言(通达信 MAC 版客户端)帧头,内层帧结构与标准帧同构
+	// ([10:12] 为 mac 命令号如 0x122F),服务器为独立 mac 池(端口同为 7709)
+	PrefixMac = 0x1C
+
 	// PrefixResp 响应帧头
 	PrefixResp = 0xB1CB7400
 )

@@ -37,6 +37,10 @@
 | 个股统计 / 资金流向    | ✅ 已完成 | `GetTdxStat` `GetTdxStat2`                      |
 | 新股申购           | ✅ 已完成 | `GetXgsg`                                       |
 | 扩展行情(期货/港股/外盘) | ✅ 已完成 | `DialExHq` + `ExQuote` `ExBars` `ExTrade` 等     |
+| mac 秒级逐笔成交     | ✅ 已完成 | `DialMacDefault` + `GetMacTradeAll` `GetMacHistoryTrade` |
+| mac 批量自定义行情(主力净流入等) | ✅ 已完成 | `DialMacDefault` + `GetMacQuote` |
+| mac 资金流向 / 所属板块 / 板块成分 | ✅ 已完成 | `GetMacCapitalFlow` `GetMacBelongBoards` `GetMacBoardMembers` |
+| mac 交易时段 / K线总量 / 远程文件 | ✅ 已完成 | `GetMacServerSession` `GetMacKlineCount` `GetMacFile` |
 
 ---
 
@@ -241,6 +245,62 @@ bars, _ := ex.ExBars(category, market, code, 0, 20) // K线
 ticks, _ := ex.ExTrade(market, code, 0, 30)        // 分笔成交
 _ = markets; _ = n; _ = insts; _ = q; _ = bars; _ = ticks
 ```
+
+---
+
+## ⚡ mac 秒级逐笔成交 (通达信 MAC 版协议, 端口 7709)
+
+mac 方言是通达信 MAC 版客户端使用的协议变体: 传输信封与标准 7709 完全相同(16字节响应头+zlib),
+仅内层命令帧不同。服务器为独立 mac 池(与标准行情不重叠, 端口同 7709), 需用 `DialMac*` 单独连接。
+
+相比标准协议 `GetTrade`(分钟精度), mac 逐笔提供**秒级时间 + 成交笔数**, 且含盘后固定价格成交:
+
+```go
+c, err := tdx.DialMacDefault() // 或 DialMac(addr) / DialMacHosts(hosts)
+if err != nil { panic(err) }
+defer c.Close()
+
+// 最近交易时段全部逐笔(自动分页, 时间正序), 秒级+笔数
+resp, err := c.GetMacTradeAll("sh601872")
+if err != nil { panic(err) }
+for _, v := range resp.List {
+    fmt.Println(v) // 2026-08-28 09:25:01  19.000  7907(手)  626(笔)
+}
+
+// 指定日期(YYYYMMDD)
+hist, err := c.GetMacHistoryTrade("20260828", "sh601872", 0, 10) // start 从最新端往回
+_ = hist
+
+// 批量自定义字段报价(实时): 主力净流入/内外盘/均价/涨速/量比/涨跌停价/PE/盘后量
+// (标准 GetQuote 没有的字段, 厂商口径; 单次最多 80 只)
+quotes, err := c.GetMacQuote("sh601872", "sz000001")
+_ = quotes
+
+// 资金流向(主力/散户净额, 与 0x122B 主力净额同源) / 所属板块
+flow, err := c.GetMacCapitalFlow("sh601872")
+_ = flow
+boards, err := c.GetMacBelongBoards("sh601872") // 上海板块(880216)...
+_ = boards
+
+// 板块成分(按涨幅降序; 板块显示代码自动转协议代码 880216→20216)
+members, err := c.GetMacBoardMembers("880216", 0, 10)
+_ = members
+
+// 交易时段与交易日历 / K线总量 / 远程文件
+session, err := c.GetMacServerSession()
+_ = session
+cnt, err := c.GetMacKlineCount()
+_ = cnt
+data, err := c.GetMacFile("文件名") // 自动分段下载(单段 30KB)
+_ = data
+```
+
+说明:
+- 单次 `GetMacTrade` 请求 `start` 从**最新一端往回偏移**, `count` 建议 ≤1000; `GetMacTradeAll` 自动分页拼接为时间正序, 建议盘后调用。
+- `MacTrade.Status`: 0=买入 1=卖出 2=中性/集合竞价 5=盘后固定价格成交。
+- 记录时间日期部分为请求日期/客户端当日, 非交易日拉取的是最近交易日数据(同标准 `GetTrade`)。
+- 已与 easy_tdx(其协议逆向自 pytdx, 数据与东方财富逐笔对账)逐行核对 100% 一致; 实连测试 `TDX_MAC_LIVE=1 go test . -run TestMacTradeLive`。
+- `GetMacQuote` 实测校验: 内盘+外盘=总量、均价×股数=成交额、换手=量/流通股 全部吻合; `MainNetAmount` 为通达信自家主力口径(与腾讯/东财同数量级但数值不同); 顺带修正了 easy_tdx 类型表一处错误(0x2E 盘后量实为 float32 而非 int32)。
 
 ---
 

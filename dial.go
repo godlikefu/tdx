@@ -110,3 +110,32 @@ func NewExRangeDial(hosts []string) ios.DialFunc {
 		return
 	}
 }
+
+// NewMacRangeDial 遍历 mac 方言服务器地址进行连接,成功则结束遍历(端口 7709)
+func NewMacRangeDial(hosts []string) ios.DialFunc {
+	if len(hosts) == 0 {
+		hosts = MacHosts
+	}
+	return func(ctx context.Context) (c ios.ReadWriteCloser, _ string, err error) {
+		for i, addr := range hosts {
+			select {
+			case <-ctx.Done():
+				return nil, "", ctx.Err()
+			default:
+			}
+			if !strings.Contains(addr, ":") {
+				addr += ":" + MacPort
+			}
+			c, err = net.Dial("tcp", addr)
+			if err == nil {
+				return c, addr, nil
+			}
+			if i < len(hosts)-1 {
+				//最后一个错误返回出去
+				logs.Err(err, "等待2秒后尝试下一个mac服务地址...")
+				<-time.After(time.Second * 2)
+			}
+		}
+		return
+	}
+}

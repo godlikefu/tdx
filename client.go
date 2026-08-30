@@ -147,6 +147,9 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
 	case protocol.TypeHeart:
 
+	case protocol.TypeLogin2:
+		//第二次登录响应,忽略(mac 方言握手第三条的响应类型)
+
 	case protocol.TypeCount:
 		resp, err = protocol.MCount.Decode(f.Data)
 
@@ -170,6 +173,38 @@ func (this *Client) handlerDealMessage(c *client.Client, msg ios.Acker) {
 
 	case protocol.TypeHistoryMinuteTrade:
 		resp, err = protocol.MHistoryTrade.Decode(f.Data, val.(protocol.TradeCache))
+
+	case protocol.TypeMacTransaction:
+		resp, err = protocol.MMacTrade.Decode(f.Data, val.(protocol.MacTradeCache))
+
+	case protocol.TypeMacQuote:
+		resp, err = protocol.MMacQuote.Decode(f.Data)
+
+	case protocol.TypeMacBoardMembers:
+		resp, err = protocol.MMacBoardMembers.Decode(f.Data)
+
+	case protocol.TypeMacQuery:
+		//0x1218 同命令号两个子命令(帧头 head 区分), 按请求时的缓存类型分发
+		switch val.(type) {
+		case protocol.MacCapitalFlowCache:
+			resp, err = protocol.MMacCapitalFlow.Decode(f.Data)
+		case protocol.MacBelongBoardCache:
+			resp, err = protocol.MMacBelongBoard.Decode(f.Data)
+		default:
+			err = fmt.Errorf("0x1218 响应缺少缓存类型标识")
+		}
+
+	case protocol.TypeMacServerSession:
+		resp, err = protocol.MMacServerSession.Decode(f.Data)
+
+	case protocol.TypeMacKlineOffset:
+		resp, err = protocol.MMacKlineCount.Decode(f.Data)
+
+	case protocol.TypeMacFileMeta:
+		resp, err = protocol.MMacFileMeta.Decode(f.Data)
+
+	case protocol.TypeMacFileData:
+		resp, err = protocol.MMacFileData.Decode(f.Data)
 
 	case protocol.TypeKline:
 		resp, err = protocol.MKline.Decode(f.Data, val.(protocol.KlineCache))
