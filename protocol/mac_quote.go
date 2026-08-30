@@ -206,26 +206,45 @@ type MacQuote struct {
 	MainNetRatio   float64 //主力净比%
 	EntrustRatio   float64 //委比%
 
-	BidPrice1 Price //买一价(厘)
-	BidPrice2 Price //买二价
-	BidPrice3 Price //买三价
-	BidPrice4 Price //买四价
-	BidPrice5 Price //买五价
-	AskPrice1 Price //卖一价(厘)
-	AskPrice2 Price //卖二价
-	AskPrice3 Price //卖三价
-	AskPrice4 Price //卖四价
-	AskPrice5 Price //卖五价
-	BidVol1   int64 //买一量(手)
-	BidVol2   int64 //买二量
-	BidVol3   int64 //买三量
-	BidVol4   int64 //买四量
-	BidVol5   int64 //买五量
-	AskVol1   int64 //卖一量(手)
-	AskVol2   int64 //卖二量
-	AskVol3   int64 //卖三量
-	AskVol4   int64 //卖四量
-	AskVol5   int64 //卖五量
+	Bids [5]MacLevel //买1-5档
+	Asks [5]MacLevel //卖1-5档
+}
+
+// MacLevel 盘口单档
+type MacLevel struct {
+	Price Price //价格(厘)
+	Vol   int64 //量(手)
+}
+
+func (this MacLevel) String() string {
+	return fmt.Sprintf("%.3f×%d", this.Price.Float64(), this.Vol)
+}
+
+// macLevel 返回字段位对应的盘口档位
+func (this *MacQuote) macLevel(bit uint16) *MacLevel {
+	switch bit {
+	case mqBidPrice1, mqBidVol1:
+		return &this.Bids[0]
+	case mqBidPrice2, mqBidVol2:
+		return &this.Bids[1]
+	case mqBidPrice3, mqBidVol3:
+		return &this.Bids[2]
+	case mqBidPrice4, mqBidVol4:
+		return &this.Bids[3]
+	case mqBidPrice5, mqBidVol5:
+		return &this.Bids[4]
+	case mqAskPrice1, mqAskVol1:
+		return &this.Asks[0]
+	case mqAskPrice2, mqAskVol2:
+		return &this.Asks[1]
+	case mqAskPrice3, mqAskVol3:
+		return &this.Asks[2]
+	case mqAskPrice4, mqAskVol4:
+		return &this.Asks[3]
+	case mqAskPrice5, mqAskVol5:
+		return &this.Asks[4]
+	}
+	return nil
 }
 
 func (this *MacQuote) String() string {
@@ -325,46 +344,16 @@ func decodeMacQuoteRows(bs []byte, defs []macQuoteFieldDef) ([]*MacQuote, error)
 				q.MainNetRatio = f.float(v)
 			case mqEntrustRatio:
 				q.EntrustRatio = f.float(v)
-			case mqBidPrice1:
-				q.BidPrice1 = f.price(v)
-			case mqBidPrice2:
-				q.BidPrice2 = f.price(v)
-			case mqBidPrice3:
-				q.BidPrice3 = f.price(v)
-			case mqBidPrice4:
-				q.BidPrice4 = f.price(v)
-			case mqBidPrice5:
-				q.BidPrice5 = f.price(v)
-			case mqAskPrice1:
-				q.AskPrice1 = f.price(v)
-			case mqAskPrice2:
-				q.AskPrice2 = f.price(v)
-			case mqAskPrice3:
-				q.AskPrice3 = f.price(v)
-			case mqAskPrice4:
-				q.AskPrice4 = f.price(v)
-			case mqAskPrice5:
-				q.AskPrice5 = f.price(v)
-			case mqBidVol1:
-				q.BidVol1 = int64(Uint32(v))
-			case mqBidVol2:
-				q.BidVol2 = int64(Uint32(v))
-			case mqBidVol3:
-				q.BidVol3 = int64(Uint32(v))
-			case mqBidVol4:
-				q.BidVol4 = int64(Uint32(v))
-			case mqBidVol5:
-				q.BidVol5 = int64(Uint32(v))
-			case mqAskVol1:
-				q.AskVol1 = int64(Uint32(v))
-			case mqAskVol2:
-				q.AskVol2 = int64(Uint32(v))
-			case mqAskVol3:
-				q.AskVol3 = int64(Uint32(v))
-			case mqAskVol4:
-				q.AskVol4 = int64(Uint32(v))
-			case mqAskVol5:
-				q.AskVol5 = int64(Uint32(v))
+			case mqBidPrice1, mqBidPrice2, mqBidPrice3, mqBidPrice4, mqBidPrice5,
+				mqAskPrice1, mqAskPrice2, mqAskPrice3, mqAskPrice4, mqAskPrice5:
+				if l := q.macLevel(f.bit); l != nil {
+					l.Price = f.price(v)
+				}
+			case mqBidVol1, mqBidVol2, mqBidVol3, mqBidVol4, mqBidVol5,
+				mqAskVol1, mqAskVol2, mqAskVol3, mqAskVol4, mqAskVol5:
+				if l := q.macLevel(f.bit); l != nil {
+					l.Vol = int64(Uint32(v))
+				}
 			}
 		}
 		out = append(out, q)
