@@ -168,10 +168,10 @@ func TestDecodeCode(t *testing.T) {
 		// 带点后缀
 		{"000001.SZ", ExchangeSZ, "000001"},
 		{"600000.SH", ExchangeSH, "600000"},
-		{"600000.sh", ExchangeSH, "600000"}, //小写后缀
-		{"399001.SZ", ExchangeSZ, "399001"}, //深成指
-		{"00700.HK", ExchangeHK, "00700"},   //港股
-		{"AAPL.US", ExchangeUS, "AAPL"},     //美股
+		{"600000.sh", ExchangeSH, "600000"},   //小写后缀
+		{"399001.SZ", ExchangeSZ, "399001"},   //深成指
+		{"00700.HK", ExchangeHK, "00700"},     //港股
+		{"AAPL.US", ExchangeUS, "AAPL"},       //美股
 		{"IF2609.CFF", ExchangeCFF, "IF2609"}, //期货
 
 		// 港股

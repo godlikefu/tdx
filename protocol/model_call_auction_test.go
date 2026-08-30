@@ -26,9 +26,9 @@ func auctionRecord(minute uint16, price float32, match uint32, unmatched int32, 
 func TestCallAuctionDecodeUnmatchedSideAndWidth(t *testing.T) {
 	payload := []byte{3, 0} // count = 3
 	payload = append(payload,
-		auctionRecord(9*60+15, 11.75, 725, -78604, 0)...)  // 负值：卖盘未匹配，且 |值| > 32767
+		auctionRecord(9*60+15, 11.75, 725, -78604, 0)...) // 负值：卖盘未匹配，且 |值| > 32767
 	payload = append(payload,
-		auctionRecord(9*60+15, 11.7, 920, 414, 9)...)      // 正值：买盘未匹配
+		auctionRecord(9*60+15, 11.7, 920, 414, 9)...) // 正值：买盘未匹配
 	payload = append(payload,
 		auctionRecord(9*60+24, 16.34, 5401, 109912, 57)...) // 涨停一字场景：买盘排队 109912 手
 

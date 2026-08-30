@@ -50,13 +50,13 @@ const (
 const (
 	ReportZHB = "zhb.zip" // 板块/配置数据总包(report file 下载后解压, 含下列文件)
 
-	FileTdxZs   = "tdxzs.cfg"   // 板块指数配置: 板块名↔指数代码(880xxx 行业/概念, 881xxx 地域)↔类型
-	FileTdxZs3  = "tdxzs3.cfg"  // 板块指数配置(扩展, 同 tdxzs.cfg 格式)
-	FileTdxDsZs = "tdxdszs.cfg" // 港股板块指数配置: 板块名↔指数代码(HKxxxx)
-	FileTdxBk    = "tdxbk.cfg"    // 概念板块简称↔全称
+	FileTdxZs     = "tdxzs.cfg"     // 板块指数配置: 板块名↔指数代码(880xxx 行业/概念, 881xxx 地域)↔类型
+	FileTdxZs3    = "tdxzs3.cfg"    // 板块指数配置(扩展, 同 tdxzs.cfg 格式)
+	FileTdxDsZs   = "tdxdszs.cfg"   // 港股板块指数配置: 板块名↔指数代码(HKxxxx)
+	FileTdxBk     = "tdxbk.cfg"     // 概念板块简称↔全称
 	FileTdxBjMore = "tdxbjmore.cfg" // 北交所代码↔名称
-	FileIncon    = "incon.dat"    // 证监会/通达信行业分类代码表
-	FileHsPy    = "hspy.dat"    // 沪深拼音/简称
+	FileIncon     = "incon.dat"     // 证监会/通达信行业分类代码表
+	FileHsPy      = "hspy.dat"      // 沪深拼音/简称
 )
 
 // TdxZs 一个板块指数定义(来自 tdxzs.cfg / tdxzs3.cfg / tdxdszs.cfg)。
