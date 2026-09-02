@@ -1,0 +1,3320 @@
+openapi: 3.0.3
+info:
+  title: tdx HTTP API
+  version: 1.0.0
+  description: '通达信协议 HTTP 服务(标准行情 + mac 方言 + 扩展行情)。
+
+
+    - 统一响应 `{code, msg, data}`, code=0 成功
+
+    - 价格单位=厘(元×1000), 成交量=手, 资金流单位=元
+
+    - /mac/* 需启动配置 WithMacHosts(或 cmd/tdx-api 默认开启)
+
+    - 本文件由路由注册机械提取生成, 与代码同步校验'
+servers:
+- url: http://127.0.0.1:8080
+tags:
+- name: 健康检查
+- name: 代码与数量
+- name: 行情与财务
+- name: 分时与成交
+- name: K线
+- name: 指数K线
+- name: 板块与报表
+- name: 扩展行情
+- name: mac 方言
+paths:
+  /:
+    get:
+      tags:
+      - 健康检查
+      summary: 健康检查
+      description: 健康检查
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /count:
+    get:
+      tags:
+      - 代码与数量
+      summary: 指定交易所证券数量
+      description: 指定交易所证券数量
+      parameters:
+      - $ref: '#/components/parameters/exchange'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /code:
+    get:
+      tags:
+      - 代码与数量
+      summary: 证券代码列表(分页)
+      description: 证券代码列表(分页)
+      parameters:
+      - $ref: '#/components/parameters/exchange'
+      - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /code/all:
+    get:
+      tags:
+      - 代码与数量
+      summary: 全部证券代码
+      description: 全部证券代码
+      parameters:
+      - $ref: '#/components/parameters/exchange'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /code/stocks:
+    get:
+      tags:
+      - 代码与数量
+      summary: 全部股票代码
+      description: 全部股票代码
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /code/etfs:
+    get:
+      tags:
+      - 代码与数量
+      summary: 全部 ETF 代码
+      description: 全部 ETF 代码
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /code/indexes:
+    get:
+      tags:
+      - 代码与数量
+      summary: 全部指数代码
+      description: 全部指数代码
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /quote:
+    get:
+      tags:
+      - 行情与财务
+      summary: 实时行情报价(标准 0x053E, 含五档盘口)
+      description: 实时行情报价(标准 0x053E, 含五档盘口)
+      parameters:
+      - $ref: '#/components/parameters/codes'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Quote'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /call_auction:
+    get:
+      tags:
+      - 行情与财务
+      summary: 集合竞价数据
+      description: 集合竞价数据
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /gbbq:
+    get:
+      tags:
+      - 行情与财务
+      summary: 除权除息(股本变更)
+      description: 除权除息(股本变更)
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /finance:
+    get:
+      tags:
+      - 行情与财务
+      summary: 财务信息
+      description: 财务信息
+      parameters:
+      - $ref: '#/components/parameters/exchange'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /company/category:
+    get:
+      tags:
+      - 行情与财务
+      summary: F10 公司资料文件目录
+      description: F10 公司资料文件目录
+      parameters:
+      - $ref: '#/components/parameters/exchange'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /company/content:
+    get:
+      tags:
+      - 行情与财务
+      summary: F10 文件内容(分段)
+      description: F10 文件内容(分段)
+      parameters:
+      - $ref: '#/components/parameters/exchange'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/filename'
+      - $ref: '#/components/parameters/start32'
+      - $ref: '#/components/parameters/length'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /minute:
+    get:
+      tags:
+      - 分时与成交
+      summary: 当日分时
+      description: 当日分时
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MinuteResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /minute/history:
+    get:
+      tags:
+      - 分时与成交
+      summary: 历史分时
+      description: 历史分时
+      parameters:
+      - $ref: '#/components/parameters/date'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MinuteResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /trade:
+    get:
+      tags:
+      - 分时与成交
+      summary: 分笔成交(分页)
+      description: 分笔成交(分页)
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /trade/all:
+    get:
+      tags:
+      - 分时与成交
+      summary: 当日全部分笔
+      description: 当日全部分笔
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /trade/history:
+    get:
+      tags:
+      - 分时与成交
+      summary: 历史分笔(分页)
+      description: 历史分笔(分页)
+      parameters:
+      - $ref: '#/components/parameters/date'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /trade/history/day:
+    get:
+      tags:
+      - 分时与成交
+      summary: 历史分笔(按日)
+      description: 历史分笔(按日)
+      parameters:
+      - $ref: '#/components/parameters/date'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline:
+    get:
+      tags:
+      - K线
+      summary: /kline
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/type'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/type'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/minute:
+    get:
+      tags:
+      - K线
+      summary: /kline/minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/minute/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/minute/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/5minute:
+    get:
+      tags:
+      - K线
+      summary: /kline/5minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/5minute/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/5minute/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/15minute:
+    get:
+      tags:
+      - K线
+      summary: /kline/15minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/15minute/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/15minute/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/30minute:
+    get:
+      tags:
+      - K线
+      summary: /kline/30minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/30minute/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/30minute/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/60minute:
+    get:
+      tags:
+      - K线
+      summary: /kline/60minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/60minute/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/60minute/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/day:
+    get:
+      tags:
+      - K线
+      summary: /kline/day
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/day/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/day/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/week:
+    get:
+      tags:
+      - K线
+      summary: /kline/week
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/week/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/week/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/month:
+    get:
+      tags:
+      - K线
+      summary: /kline/month
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/month/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/month/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/quarter:
+    get:
+      tags:
+      - K线
+      summary: /kline/quarter
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/quarter/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/quarter/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/year:
+    get:
+      tags:
+      - K线
+      summary: /kline/year
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /kline/year/all:
+    get:
+      tags:
+      - K线
+      summary: /kline/year/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index:
+    get:
+      tags:
+      - 指数K线
+      summary: /index
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/type'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/all:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/type'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/minute:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/5minute:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/5minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/15minute:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/15minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/30minute:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/30minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/60minute:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/60minute
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/day:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/day
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/day/all:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/day/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/week/all:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/week/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/month/all:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/month/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/quarter/all:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/quarter/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /index/year/all:
+    get:
+      tags:
+      - 指数K线
+      summary: /index/year/all
+      description: ''
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/KlineResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /block/data:
+    get:
+      tags:
+      - 板块与报表
+      summary: 板块数据文件解析
+      description: 板块数据文件解析
+      parameters:
+      - name: file
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /block/data/index:
+    get:
+      tags:
+      - 板块与报表
+      summary: 板块指数数据
+      description: 板块指数数据
+      parameters:
+      - name: file
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /block/file:
+    get:
+      tags:
+      - 板块与报表
+      summary: 板块原始文件
+      description: 板块原始文件
+      parameters:
+      - name: file
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /report/file:
+    get:
+      tags:
+      - 板块与报表
+      summary: 报表原始文件(0x06B9)
+      description: 报表原始文件(0x06B9)
+      parameters:
+      - name: file
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /zhb/files:
+    get:
+      tags:
+      - 板块与报表
+      summary: 盘后板块配置(zhb.zip)文件列表
+      description: 盘后板块配置(zhb.zip)文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /tdx/zs:
+    get:
+      tags:
+      - 板块与报表
+      summary: 通达信指数文件列表
+      description: 通达信指数文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /tdx/bk:
+    get:
+      tags:
+      - 板块与报表
+      summary: 通达信板块文件列表
+      description: 通达信板块文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /tdx/stat:
+    get:
+      tags:
+      - 板块与报表
+      summary: 个股统计文件列表
+      description: 个股统计文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /tdx/stat2:
+    get:
+      tags:
+      - 板块与报表
+      summary: 个股统计2文件列表
+      description: 个股统计2文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /tdx/xgsg:
+    get:
+      tags:
+      - 板块与报表
+      summary: 新股申购文件列表
+      description: 新股申购文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /tdx/hy:
+    get:
+      tags:
+      - 板块与报表
+      summary: 行业文件列表
+      description: 行业文件列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /spblock:
+    get:
+      tags:
+      - 板块与报表
+      summary: 自定义板块
+      description: 自定义板块
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/markets:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情市场列表
+      description: 扩展行情市场列表
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/count:
+    get:
+      tags:
+      - 扩展行情
+      summary: 市场证券数量
+      description: 市场证券数量
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/instruments:
+    get:
+      tags:
+      - 扩展行情
+      summary: 证券列表(分页)
+      description: 证券列表(分页)
+      parameters:
+      - $ref: '#/components/parameters/start32'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/quote:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情报价
+      description: 扩展行情报价
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/quote_list:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情分类列表
+      description: 扩展行情分类列表
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/category'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/bars:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情 K线
+      description: 扩展行情 K线
+      parameters:
+      - $ref: '#/components/parameters/category'
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/minute:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情分时
+      description: 扩展行情分时
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/minute/hist:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情历史分时
+      description: 扩展行情历史分时
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/date32'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/trade:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情分笔
+      description: 扩展行情分笔
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/trade/hist:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情历史分笔
+      description: 扩展行情历史分笔
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/date32'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /ex/bars/range:
+    get:
+      tags:
+      - 扩展行情
+      summary: 扩展行情 K线(日期区间)
+      description: 扩展行情 K线(日期区间)
+      parameters:
+      - $ref: '#/components/parameters/market'
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/date32'
+      - $ref: '#/components/parameters/date2'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/quote:
+    get:
+      tags:
+      - mac 方言
+      summary: '批量自定义字段报价: 主力净流入/内外盘/涨跌停价/PE/五档盘口/委比等 46 字段(≤80只)'
+      description: '批量自定义字段报价: 主力净流入/内外盘/涨跌停价/PE/五档盘口/委比等 46 字段(≤80只)'
+      parameters:
+      - $ref: '#/components/parameters/codes'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/MacQuote'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/trade:
+    get:
+      tags:
+      - mac 方言
+      summary: 秒级逐笔成交(含笔数/盘后固定价), start 从最新端往回, 默认 start=0&count=100
+      description: 秒级逐笔成交(含笔数/盘后固定价), start 从最新端往回, 默认 start=0&count=100
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - name: start
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: count
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MacTradeResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/trade/all:
+    get:
+      tags:
+      - mac 方言
+      summary: 当日全量秒级逐笔(并发分页, 时间正序, ~500KB 大响应)
+      description: 当日全量秒级逐笔(并发分页, 时间正序, ~500KB 大响应)
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MacTradeResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/trade/history:
+    get:
+      tags:
+      - mac 方言
+      summary: 指定日期秒级逐笔, 默认 start=0&count=100
+      description: 指定日期秒级逐笔, 默认 start=0&count=100
+      parameters:
+      - $ref: '#/components/parameters/code'
+      - $ref: '#/components/parameters/date'
+      - name: start
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: count
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MacTradeResp'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/capital_flow:
+    get:
+      tags:
+      - mac 方言
+      summary: 资金流向(主力/散户净额, 通达信口径)
+      description: 资金流向(主力/散户净额, 通达信口径)
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MacCapitalFlow'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/belong_boards:
+    get:
+      tags:
+      - mac 方言
+      summary: 个股所属板块(概念/行业/地域)
+      description: 个股所属板块(概念/行业/地域)
+      parameters:
+      - $ref: '#/components/parameters/code'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/MacBelongBoard'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/board_members:
+    get:
+      tags:
+      - mac 方言
+      summary: 板块成分报价(按涨幅降序), 默认 start=0&count=10
+      description: 板块成分报价(按涨幅降序), 默认 start=0&count=10
+      parameters:
+      - $ref: '#/components/parameters/board'
+      - name: start
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: count
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 10
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data: {}
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/server_session:
+    get:
+      tags:
+      - mac 方言
+      summary: '服务器交易时段与交易日历(分钟数: 570=09:30, 900=15:00)'
+      description: '服务器交易时段与交易日历(分钟数: 570=09:30, 900=15:00)'
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MacServerSession'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /mac/kline_count:
+    get:
+      tags:
+      - mac 方言
+      summary: K线数据总量(可兼作 mac 服务探活)
+      description: K线数据总量(可兼作 mac 服务探活)
+      parameters: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Envelope'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '#/components/schemas/MacKlineCount'
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '502':
+          description: 上游通达信服务器错误/超时
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+components:
+  parameters:
+    code:
+      name: code
+      in: query
+      required: true
+      description: 证券代码, 带前缀(sh601872/sz000001/bj430047)或 6 位数字
+      schema:
+        type: string
+        example: sh601872
+    codes:
+      name: codes
+      in: query
+      required: true
+      description: 逗号分隔的多个证券代码(≤80 只)
+      schema:
+        type: string
+        example: sh601872,sz000001
+    exchange:
+      name: exchange
+      in: query
+      required: true
+      description: 交易所
+      schema:
+        type: string
+        enum:
+        - sh
+        - sz
+        - bj
+    start:
+      name: start
+      in: query
+      required: true
+      description: 分页起点(0=最新一端)
+      schema:
+        type: integer
+        minimum: 0
+    count:
+      name: count
+      in: query
+      required: true
+      description: 每页数量
+      schema:
+        type: integer
+        minimum: 1
+    date:
+      name: date
+      in: query
+      required: true
+      description: 日期 YYYYMMDD
+      schema:
+        type: string
+        example: '20260828'
+    type:
+      name: type
+      in: query
+      required: true
+      description: 'K线类型: 0=5分钟 1=15分钟 2=30分钟 3=60分钟 4=日K(Day2) 5=周 6=月 7/8=1分钟 9=日 10=季 11=年'
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 11
+    board:
+      name: board
+      in: query
+      required: true
+      description: 板块显示代码(880216/399372/899050/000686 等, 自动转协议代码)
+      schema:
+        type: string
+        example: '880216'
+    market:
+      name: market
+      in: query
+      required: true
+      description: 市场代码(扩展行情, 见 /ex/markets)
+      schema:
+        type: integer
+    category:
+      name: category
+      in: query
+      required: true
+      description: 扩展行情 K线周期
+      schema:
+        type: integer
+    start32:
+      name: start
+      in: query
+      required: true
+      description: 起始偏移
+      schema:
+        type: integer
+        minimum: 0
+        format: int32
+    date32:
+      name: date
+      in: query
+      required: true
+      description: 日期 YYYYMMDD
+      schema:
+        type: integer
+        example: 20260828
+    date2:
+      name: date2
+      in: query
+      required: true
+      description: 结束日期 YYYYMMDD
+      schema:
+        type: integer
+        example: 20260828
+    filename:
+      name: filename
+      in: query
+      required: true
+      description: F10 文件名(来自 /company/category)
+      schema:
+        type: string
+    length:
+      name: length
+      in: query
+      required: true
+      description: 读取长度(字节)
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    MacLevel:
+      type: object
+      properties:
+        Price:
+          type: integer
+          description: 价格(厘, 元×1000)
+        Vol:
+          type: integer
+          description: 量(手)
+    Kline:
+      type: object
+      properties:
+        Last:
+          type: integer
+          description: 昨收(厘)
+        Open:
+          type: integer
+          description: 开盘(厘)
+        High:
+          type: integer
+          description: 最高(厘)
+        Low:
+          type: integer
+          description: 最低(厘)
+        Close:
+          type: integer
+          description: 收盘/最新(厘)
+        Order:
+          type: integer
+          description: 成交单数
+        Volume:
+          type: integer
+          description: 成交量(手)
+        Amount:
+          type: integer
+          description: 成交额(厘)
+        Time:
+          type: string
+          format: date-time
+        UpCount:
+          type: integer
+          description: 上涨家数(指数)
+        DownCount:
+          type: integer
+          description: 下跌家数(指数)
+    KlineResp:
+      type: object
+      properties:
+        Count:
+          type: integer
+        List:
+          type: array
+          items:
+            $ref: '#/components/schemas/Kline'
+    PriceLevel:
+      type: object
+      properties:
+        Buy:
+          type: boolean
+        Price:
+          type: integer
+          description: 委托价(厘)
+        Number:
+          type: integer
+          description: 委托量(手)
+    Quote:
+      type: object
+      properties:
+        Exchange:
+          type: integer
+          description: 0=SZ 1=SH
+        Code:
+          type: string
+        Active1:
+          type: integer
+          description: 活跃度
+        Kline:
+          $ref: '#/components/schemas/Kline'
+        ServerTime:
+          type: string
+          description: 服务器时间 HHMMSSmmm
+        Intuition:
+          type: integer
+          description: 现量(手)
+        InsideDish:
+          type: integer
+          description: 内盘(手)
+        OuterDisc:
+          type: integer
+          description: 外盘(手)
+        BuyLevel:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceLevel'
+          description: 5档买盘
+        SellLevel:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceLevel'
+          description: 5档卖盘
+        Rate:
+          type: number
+    MinuteResp:
+      type: object
+      properties:
+        Count:
+          type: integer
+        List:
+          type: array
+          items:
+            type: object
+            properties:
+              Time:
+                type: string
+                description: HHMM
+              Price:
+                type: integer
+                description: 价格(厘)
+              Number:
+                type: integer
+                description: 量(手)
+    MacQuote:
+      type: object
+      description: 价格=厘(元×1000); 量=手; MainNetAmount/Amount=元
+      properties:
+        Market:
+          type: integer
+          description: 0=SZ 1=SH
+        Code:
+          type: string
+        Name:
+          type: string
+        PreClose:
+          type: integer
+        Open:
+          type: integer
+        High:
+          type: integer
+        Low:
+          type: integer
+        Price:
+          type: integer
+          description: 最新价(厘)
+        AvgPrice:
+          type: integer
+          description: 均价(厘)
+        BuyPriceLimit:
+          type: integer
+          description: 涨停价(厘)
+        SellPriceLimit:
+          type: integer
+          description: 跌停价(厘)
+        Volume:
+          type: integer
+          description: 成交量(手)
+        VolRatio:
+          type: number
+          description: 量比
+        Amount:
+          type: number
+          description: 成交额(元)
+        InsideVolume:
+          type: integer
+          description: 内盘(手)
+        OutsideVolume:
+          type: integer
+          description: 外盘(手)
+        TotalShares:
+          type: number
+          description: 总股本(万)
+        FloatShares:
+          type: number
+          description: 流通股(万)
+        PE:
+          type: number
+          description: 市盈率(动)
+        LastVolume:
+          type: integer
+          description: 现量(手)
+        Turnover:
+          type: number
+          description: 换手%
+        SpeedPct:
+          type: number
+          description: 涨速%
+        AfterHoursVol:
+          type: number
+          description: 盘后量(手)
+        PeTTM:
+          type: number
+        PeStatic:
+          type: number
+        MainNetAmount:
+          type: number
+          description: 今日主力净流入(元)
+        VolSpeedPct:
+          type: number
+        MainNetRatio:
+          type: number
+          description: 主力净比%
+        EntrustRatio:
+          type: number
+          description: 委比%
+        Bids:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacLevel'
+          description: 买1-5档
+        Asks:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacLevel'
+          description: 卖1-5档
+    MacTrade:
+      type: object
+      properties:
+        Time:
+          type: string
+          format: date-time
+          description: 秒级(日期部分由客户端当日补齐)
+        Price:
+          type: integer
+          description: 价格(厘)
+        Volume:
+          type: integer
+          description: 量(手)
+        TradeCount:
+          type: integer
+          description: 撮合笔数
+        Status:
+          type: integer
+          description: 0=买入 1=卖出 2=中性/集合竞价 5=盘后固定价
+    MacTradeResp:
+      type: object
+      properties:
+        Count:
+          type: integer
+        Total:
+          type: integer
+          description: 当日总笔数
+        List:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacTrade'
+    MacCapitalFlow:
+      type: object
+      properties:
+        MainIn:
+          type: number
+          description: 主力流入(元)
+        MainOut:
+          type: number
+          description: 主力流出(元)
+        MainNet:
+          type: number
+          description: 主力净流入(元)
+        SmallIn:
+          type: number
+          description: 散户流入(元)
+        SmallOut:
+          type: number
+          description: 散户流出(元)
+        SmallNet:
+          type: number
+          description: 散户净流入(元)
+        FiveDay:
+          type: array
+          items:
+            type: number
+          description: 5日明细(口径见 README)
+    MacBelongBoard:
+      type: object
+      properties:
+        BoardType:
+          type: integer
+        Market:
+          type: integer
+        BoardCode:
+          type: string
+        BoardName:
+          type: string
+        Close:
+          type: number
+        PreClose:
+          type: number
+    MacSession:
+      type: object
+      properties:
+        Open:
+          type: integer
+          description: 开市分钟数(570=09:30)
+        Close:
+          type: integer
+          description: 收市分钟数(900=15:00)
+    MacServerSession:
+      type: object
+      properties:
+        Today:
+          type: string
+          format: date-time
+        LastTradingDay:
+          type: string
+          format: date-time
+        Sessions1:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacSession'
+          description: 交易时段组1(A股 4 槽)
+        Sessions2:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacSession'
+          description: 交易时段组2
+        MarketParam1:
+          type: integer
+        MarketParam2:
+          type: integer
+    MacKlineCount:
+      type: object
+      properties:
+        Total:
+          type: integer
+        Returned:
+          type: integer
+    Envelope:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 0=成功 1=失败
+        msg:
+          type: string
+        data: {}

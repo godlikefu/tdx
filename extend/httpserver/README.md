@@ -1,5 +1,9 @@
 # tdx HTTP Server
 
+> **OpenAPI 规范**: [`openapi.yaml`](openapi.yaml)(OpenAPI 3.0, 86 条路由, 与代码机械同步校验), 已通过 `go:embed` 内嵌进服务二进制:
+> - `GET /docs` — 内置 Swagger UI 在线预览/调试(浏览器需可访问 unpkg.com CDN)
+> - `GET /openapi.yaml` — 下载规范文件, 离线导入 [Apifox](https://apifox.com)/Postman/Insomnia 或拖入 [Swagger Editor](https://editor.swagger.io)
+
 将通达信(tdx)行情数据通过 HTTP API 对外开放。本包基于 `tdx.Client` 实现,以 RESTful GET 接口暴露股票、指数、扩展行情等数据。
 
 ## mac 方言接口 (/mac/*)
@@ -165,6 +169,8 @@ func main() {
 | `WithPoolSize(n)` | 标准连接池大小 | `1` |
 | `WithExHqHosts(hosts...)` | 扩展行情服务器列表,为空则不启用扩展行情 | 无 |
 | `WithExPoolSize(n)` | 扩展连接池大小 | `1` |
+| `WithMacHosts(hosts...)` | mac 方言服务器列表,为空则不注册 `/mac/*` 路由 | 无 |
+| `WithMacPoolSize(n)` | mac 连接池大小(电子表格等多并发刷新建议 2~4) | `1` |
 | `WithOptions(opts...)` | 通达信连接选项,如 `tdx.WithDebug()`、`tdx.WithRedial()` | 无 |
 
 > `Default()` 会自动添加 `tdx.WithRedial()` 断线重连选项。

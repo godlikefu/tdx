@@ -245,6 +245,10 @@ func (s *Server) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /tdx/hy", s.handleTdxHy)
 	mux.HandleFunc("GET /spblock", s.handleSpBlock)
 
+	// 接口文档(规范内嵌于二进制, 无需外部文件)
+	mux.HandleFunc("GET /openapi.yaml", handleOpenAPI)
+	mux.HandleFunc("GET /docs", handleDocs)
+
 	// 扩展行情
 	if s.exPool != nil {
 		mux.HandleFunc("GET /ex/markets", s.handleExMarkets)
