@@ -194,6 +194,11 @@ func (kline) Decode(bs []byte, c KlineCache) (*KlineResp, error) {
 		switch c.Kind {
 		case KindIndex:
 			//指数和股票的差别,指数多解析4字节,并处理成交量*100
+			if len(bs) < 4 {
+				//Kind 与代码类型不匹配(如用指数解码解析股票K线)时, 记录尾部没有涨跌家数 4 字节;
+				//此前会越界 panic 并杀死连接, 这里改为干净报错
+				return nil, errors.New("指数K线数据长度不足: Kind 与代码类型不匹配(股票代码请用 GetKline)")
+			}
 			k.Volume *= 100
 			k.UpCount = conv.Int([]byte{bs[1], bs[0]})
 			k.DownCount = conv.Int([]byte{bs[3], bs[2]})
