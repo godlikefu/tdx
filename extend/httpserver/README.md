@@ -121,7 +121,17 @@ go run ./cmd/tdx-api -addr :9090 -pool 4 -mac=false -ex -debug
 #       -mac-pool mac池大小 | -ex 启用/ex路由 | -debug 协议调试日志
 ```
 
-方式二: 代码内嵌
+方式二(部署): pm2 守护运行
+
+```bash
+go build -o output/pm2/bin/tdx-api ./cmd/tdx-api   # 编译(产物在 output/ 下, 已 gitignore)
+pm2 start ecosystem.config.js                      # 仓库根目录的 pm2 配置
+pm2 logs tdx-api                                   # 日志(也可看 output/pm2/logs/)
+# 端口/池/路由可用环境变量覆盖(详见 ecosystem.config.js 头部注释):
+#   TDX_ADDR=:9090 TDX_POOL=4 TDX_EX=true pm2 start ecosystem.config.js
+```
+
+方式三: 代码内嵌
 
 ```go
 package main
