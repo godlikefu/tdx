@@ -24,7 +24,7 @@ func main() {
 	pool := flag.Int("pool", 1, "标准行情连接池大小")
 	mac := flag.Bool("mac", true, "启用 mac 方言路由(/mac/*)")
 	macPool := flag.Int("mac-pool", 1, "mac 连接池大小")
-	ex := flag.Bool("ex", false, "启用扩展行情路由(/ex/*, 期货/港股/美股)")
+	ex := flag.Bool("ex", true, "启用扩展行情路由(/ex/*, 期货/港股/美股)")
 	debug := flag.Bool("debug", false, "输出协议调试日志")
 	flag.Parse()
 
