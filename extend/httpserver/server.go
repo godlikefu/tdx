@@ -139,7 +139,7 @@ func New(opts ...Option) (*Server, error) {
 
 	s.server = &http.Server{
 		Addr:              cfg.addr,
-		Handler:           s.recoverMiddleware(mux),
+		Handler:           s.corsMiddleware(s.recoverMiddleware(mux)),
 		ReadHeaderTimeout: 10 * time.Second,
 		// 不设 WriteTimeout: 大响应(如全量逐笔 ~500KB)在慢客户端上会被中途掐断,
 		// 截断比慢更伤(客户端拿到非法 JSON); 慢由客户端自身超时控制。
@@ -276,6 +276,31 @@ func (s *Server) registerRoutes(mux *http.ServeMux) {
 		mux.HandleFunc("GET /mac/server_session", s.handleMacServerSession)
 		mux.HandleFunc("GET /mac/kline_count", s.handleMacKlineCount)
 	}
+}
+
+// corsMiddleware 统一处理 CORS:
+//   - 带 Origin 的请求回显允许来源(本地行情 API 无鉴权, 默认放行任意来源跨域调用,
+//     如 stock-analyzer 的 :5173/:3005 页面直连 8080);
+//   - OPTIONS 预检在进入 mux 前直接应答——Go 1.22 方法限定路由("GET /x")不匹配 OPTIONS,
+//     预检会落到 405, 浏览器表现为 Swagger UI「Try it out」报
+//     「Network Failure / URL scheme must be "http" or "https" for CORS request」。
+//     另一常见诱因是页面从 localhost:8080 打开而 openapi.yaml servers 写死 127.0.0.1:8080
+//     (两者是不同源), servers 现已改为相对地址优先。
+func (s *Server) corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Add("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+		}
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // recoverMiddleware panic 兜底: handler 异常时返回干净的 500 JSON,

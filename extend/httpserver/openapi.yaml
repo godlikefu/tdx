@@ -13,6 +13,9 @@ info:
 
     - 本文件由路由注册机械提取生成, 与代码同步校验'
 servers:
+# 相对地址放在首位: Swagger UI 按页面源解析, /docs 从 localhost 还是 127.0.0.1 打开
+# 都与 Try it out 请求同源, 不会再触发跨域; 第二项供 Apifox/Postman 导入时直接可用
+- url: /
 - url: http://127.0.0.1:8080
 tags:
 - name: 健康检查
