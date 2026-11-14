@@ -60,6 +60,7 @@
 
 ## 踩坑记录
 
+- **成交合成 K 线的时区**：`time.Unix` 会恢复为宿主机 `time.Local`；`Trades.Klines()` 必须转回对应成交记录的 `Location()`，否则 UTC+8 的交易日零点在 UTC 主机上落到前一天，导致整日 K 线日期错误。
 - **`.day` 价格是 uint32×(100)** 而非 float32——旧实现用 bytesToFloat 解析价格/成交量完全错误，日期解析也有误（现已修复）。
 - **分钟线价格/成交额是 float32**，必须用 `math.Float32frombits` 转，直接 `Uint32` 得位模式会得到天文数字价格。
 - **float32 精度限制**：分钟线价格以 float32(元) 存，两位小数价格经 float32 往返会差 ±1厘（如 11.2 元→11.199999），测试断言需容差。
@@ -71,3 +72,6 @@
 - zhb.zip 盘后包内含 46 个配置（tdxstat/tdxstat2/tdxbjmore/tdxhy/tdxzs/tdxbk/gbbq 等），GBK 文本，解析需 `UTF8ToGBK`。
 - **AI 沙箱内运行示例/测试**：默认 Go 构建缓存 `~/Library/Caches/go-build` 与模块缓存 `~/go/pkg/mod` 在沙箱内不可写（`operation not permitted`），需重定向到 workspace：`GOCACHE=/Users/fushixiang/tdx/.gocache/go-build GOMODCACHE=/Users/fushixiang/tdx/.gocache/gomod GOTELEMETRY=off go run .`（依赖首次会重新下载）。另：`NewCodesSqlite`/`NewGbbq` 等的 sqlite 缓存默认写在**相对 CWD** 的 `./data/database/`（已 gitignore），在哪个目录运行就落在哪；README 快速开始示例 `example/GetQuote` 末尾 `select {}` 永久阻塞，验证完输出需手动停进程。
 - **同级项目 easy_tdx**（`/Users/fushixiang/tdx/easy_tdx`，Python）：通达信 mac 协议方言(帧头 0x1C 10字节头, 同样连 7709 端口, 命令号不同如竞价 0x123D vs 标准 0x056A)，含 pandas/异步/CLI/web-ui。其 `.venv` 建于旧路径 `~/code/easy_tdx`，搬家后 python symlink 失效——直接用 `.uv-python/cpython-3.13.10-macos-aarch64-none/bin/python3.13` + `PYTHONPATH`(src 与 .venv/lib/python3.13/site-packages) 可运行；配置目录用 `EASY_TDX_CONFIG_DIR` 重定向(默认 `~/.easy_tdx` 沙箱内不可写)。其 `AuctionItem.unmatched` 保留带符号原值, 与 tdx `CallAuction.Flag` 语义一致。
+
+### 逐笔成交交易时间
+- `MTrade.Decode` 与 `MHistoryTrade.Decode` 返回的日期和分钟均按中国市场当地时间（UTC+08:00）解释，不能默认解释为 UTC，也不能依赖宿主机 `TZ`；相应回归测试位于 `protocol/model_trade_timezone_test.go`。
