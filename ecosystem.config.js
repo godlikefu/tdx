@@ -7,8 +7,10 @@
 //   pm2 restart tdx-api   /  pm2 stop tdx-api  /  pm2 delete tdx-api
 //   pm2 save && pm2 startup                            # 可选: 开机自启
 //
-// 环境变量(可选, 均有默认值, 对应 cmd/tdx-api 的启动 flags):
-//   TDX_ADDR=:8080  TDX_POOL=1  TDX_MAC_POOL=1  TDX_MAC=true  TDX_EX=false  TDX_DEBUG=false
+// 环境变量(可选, 对应 cmd/tdx-api 的启动 flags):
+//   TDX_ADDR=:8080  TDX_POOL=1  TDX_MAC_POOL=1  TDX_DEBUG=false
+//   TDX_MAC / TDX_EX: 未设时用二进制默认(源码 mac 默认 true, -ex 默认已被改为 true);
+//                     显式关闭例: TDX_EX=false pm2 start ecosystem.config.js
 //   例: TDX_ADDR=:9090 TDX_POOL=4 TDX_EX=true pm2 start ecosystem.config.js
 //   已启动过需带环境变量重启时: pm2 delete tdx-api 后重新 start, 或 pm2 restart tdx-api --update-env
 //
@@ -35,8 +37,8 @@ module.exports = {
         '-addr', process.env.TDX_ADDR || ':8080',
         '-pool', process.env.TDX_POOL || '1',
         '-mac-pool', process.env.TDX_MAC_POOL || '1',
-        ...(process.env.TDX_MAC === 'false' ? ['-mac=false'] : []), // 默认启用 /mac/* 路由
-        ...(process.env.TDX_EX === 'true' ? ['-ex'] : []),          // 默认不启用 /ex/* 路由
+        ...(process.env.TDX_MAC ? ['-mac=' + process.env.TDX_MAC] : []),   // 未设时用二进制默认(默认启用 /mac/*)
+        ...(process.env.TDX_EX ? ['-ex=' + process.env.TDX_EX] : []),      // 未设时用二进制默认(源码 -ex 默认已改为 true), TDX_EX=false 显式关闭
         ...(process.env.TDX_DEBUG === 'true' ? ['-debug'] : []),
       ],
       autorestart: true,
